@@ -1,0 +1,21 @@
+{
+	"Server": {
+		"Server": "sl098000LoyLSR1",
+		"Userid": "svc_service_1c_uzb_sql",
+		"Password": "9AF5YRGoHwdQ9IZqbIDr",
+		"Port": "1433",
+		"Database": "RS_LOYALTY"
+	},
+	"SQL": "SELECT s.Name [Магазин], s.Address [Адрес магазина], cp.Number [Номер купона], i.Name [Наименование товара], c.Time [Дата чека], c.ChequeNo [Номер чека], cl.Amount, cl.Quantity FROM ChequeLineCoupons clc LEFT JOIN ChequeLines cl on cl.ChequeLineID = clc.ChequeLineID LEFT JOIN ChequeDiscounts cd on cd.ChequeLineID = clc.ChequeLineID LEFT JOIN Cheques c on c.ChequeID = cl.ChequeID LEFT JOIN Stores s on s.StoreID = c.StoreID LEFT JOIN Coupons cp on cp.CouponID = clc.CouponID LEFT JOIN Items i on i.ItemID = cl.ItemID WHERE cp.TemplateCouponID in (13, 14, 15) AND cd.AccrualID \u003c\u003e 0 ORDER BY c.Time",
+	"TimeTables": [
+		{
+			"Time": "2023-04-03T17:09:26+07:00",
+			"Done": true
+		},
+		{
+			"Time": "2023-04-10T17:09:26+07:00",
+			"Done": false
+		}
+	],
+	"TimeOut": 300
+}
