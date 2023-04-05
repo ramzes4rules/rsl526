@@ -225,7 +225,7 @@ func ExportCustomers() error {
 		out = append(out, customer)
 	}
 
-	err = WriteObject(out, "customers.json")
+	err = WriteObject(out, FileCustomers)
 	if err != nil {
 		return err
 	}
