@@ -7,7 +7,6 @@ const LoyaltyCardCirculationId = "loyaltyCardCirculationId"
 const LoyaltyCardGroupIds = "loyaltyCardGroupIds"
 const StoreId = "storeId"
 
-// DiscountCardMapping mapping discount cards property
 type DiscountCardMapping map[string]string
 type DiscountCardMappings map[string]DiscountCardMapping
 

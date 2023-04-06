@@ -2,7 +2,10 @@ module github.com/ramzes4rules/rsl526
 
 go 1.20
 
-require github.com/denisenkom/go-mssqldb v0.12.3
+require (
+	github.com/denisenkom/go-mssqldb v0.12.3
+	github.com/ramzes4rules/leho v0.1.1
+)
 
 require (
 	github.com/golang-sql/civil v0.0.0-20190719163853-cb61b32ac6fe // indirect

@@ -1,0 +1,587 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "RS.Loyalty.Integration.ApiService",
+    "version": "1.0"
+  },
+  "paths": {
+    "/api/accounts/accrual_to_customer": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccrualToCustomer"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccrualToCustomer"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccrualToCustomer"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/accounts/accrual_to_loyalty_card": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccrualToLoyaltyCard"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccrualToLoyaltyCard"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccrualToLoyaltyCard"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/customers/customer_import": {
+      "post": {
+        "tags": [
+          "Customer"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerImportCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerImportCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerImportCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/events_bus/full_reload": {
+      "post": {
+        "tags": [
+          "EventsBus"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FullReload"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FullReload"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/FullReload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/events_bus/reload_from_global_sequence_number": {
+      "post": {
+        "tags": [
+          "EventsBus"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReloadFromGlobalSequenceNumber"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReloadFromGlobalSequenceNumber"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReloadFromGlobalSequenceNumber"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/loyalty_cards/loyalty_card_import": {
+      "post": {
+        "tags": [
+          "LoyaltyCard"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoyaltyCardImportCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoyaltyCardImportCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoyaltyCardImportCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AccrualToCustomer": {
+        "type": "object",
+        "properties": {
+          "operationDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "currencyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "customerId": {
+            "type": "string",
+            "nullable": true
+          },
+          "expirationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "activationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "interactionChannelType": {
+            "$ref": "#/components/schemas/InteractionChannelTypes"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AccrualToLoyaltyCard": {
+        "type": "object",
+        "properties": {
+          "operationDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "currencyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "loyaltyCardId": {
+            "type": "string",
+            "nullable": true
+          },
+          "expirationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "activationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "interactionChannelType": {
+            "$ref": "#/components/schemas/InteractionChannelTypes"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Communication": {
+        "type": "object",
+        "properties": {
+          "communicationChanelType": {
+            "$ref": "#/components/schemas/CommunicationChanelTypes"
+          },
+          "value": {
+            "type": "string",
+            "nullable": true
+          },
+          "confirmed": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CommunicationChanelTypes": {
+        "enum": [
+          "Phone",
+          "Email"
+        ],
+        "type": "string"
+      },
+      "CustomerImportCommand": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "operationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "interactionChannel": {
+            "$ref": "#/components/schemas/InteractionChannelTypes"
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "secondName": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true
+          },
+          "gender": {
+            "$ref": "#/components/schemas/GenderTypes"
+          },
+          "birthday": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
+          },
+          "territorialDivisionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "communications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Communication"
+            },
+            "nullable": true
+          },
+          "subscriptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubscriptionType"
+            },
+            "nullable": true
+          },
+          "customerPropertyValues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerPropertyValue"
+            },
+            "nullable": true
+          },
+          "sendingVirtualCopyCheque": {
+            "type": "boolean",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CustomerPropertyValue": {
+        "type": "object",
+        "properties": {
+          "propertyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "intValue": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "stringValue": {
+            "type": "string",
+            "nullable": true
+          },
+          "dateValue": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "booleanValue": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "enumPropertyValueId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "enumPropertyValueIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "FullReload": {
+        "type": "object",
+        "properties": {
+          "providerId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "GenderTypes": {
+        "enum": [
+          "Male",
+          "Female",
+          "Unknown"
+        ],
+        "type": "string"
+      },
+      "InteractionChannelTypes": {
+        "enum": [
+          "UserInterface",
+          "ClientPortal",
+          "MobileApplication"
+        ],
+        "type": "string"
+      },
+      "LoyaltyCardImportCommand": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "now": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "customerId": {
+            "type": "string",
+            "nullable": true
+          },
+          "number": {
+            "type": "string",
+            "nullable": true
+          },
+          "numberChangedDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "barcode": {
+            "type": "string",
+            "nullable": true
+          },
+          "barcodeChangedDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "pinCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "pinCodeChangedDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "readyToIssueDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "issueReasonId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "issueDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "activationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "blockDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "unblockDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "blockReasonId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "expirationDateChangedDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "expirationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "discountCardGroupsBoundDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "loyaltyCardGroupIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "nullable": true
+          },
+          "loyaltyCardSeriesId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "loyaltyCardCirculationId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "interactionChannel": {
+            "$ref": "#/components/schemas/InteractionChannelTypes"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReloadFromGlobalSequenceNumber": {
+        "type": "object",
+        "properties": {
+          "providerId": {
+            "type": "string",
+            "nullable": true
+          },
+          "globalSequenceNumber": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SubscriptionType": {
+        "enum": [
+          "ClientPortalMailing",
+          "MobileApplicationMailing",
+          "EmailMailing",
+          "PushMailing",
+          "SmsMailing",
+          "PhoneCallMailing",
+          "ViberMailing"
+        ],
+        "type": "string"
+      }
+    }
+  }
+}

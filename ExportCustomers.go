@@ -2,27 +2,43 @@ package main
 
 import (
 	"fmt"
+	"time"
 )
 
 const FileCustomers = "customers.json"
+
+type CustomerPropertyValue struct {
+	PropertyUID         string     `json:"propertyId"`
+	IntValue            *int32     `json:"intValue"`
+	StringValue         *string    `json:"stringValue"`
+	DateValue           *time.Time `json:"dateValue"`
+	BooleanValue        *bool      `json:"booleanValue"`
+	EnumPropertyValueId *string    `json:"enumPropertyValueId"`
+}
 
 func ExportCustomers() error {
 
 	// getting list of customers
 	customers, err := GetListOfCustomers()
 	if err != nil {
-		fmt.Printf("Error getting list of customers: %v", err)
 		return err
 	}
-	fmt.Printf("Got customers amount: %d\n\r", len(customers))
+	fmt.Printf("Got customers numbers: %d\n", len(customers))
 
 	// getting list of customers properties
 	properties, err := GetListOfProperties()
 	if err != nil {
-		fmt.Printf("Error getting list of customer properties: %v", err)
 		return err
 	}
-	fmt.Printf("Got customer properties amount: %d\n\r", len(properties))
+	fmt.Printf("Got customer properties numbers: %d\n\r", len(properties))
+
+	// reading mapping
+	var mappings = DiscountCardMappings{}
+	err = ObjectRead(&mappings, FileMappingCustomers)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Got mappings numbers: %d\n\r", len(mappings))
 
 	// getting list of customers property values
 	// types: Integer, Enum, String, Date, Boolean
@@ -30,17 +46,30 @@ func ExportCustomers() error {
 
 		switch property.PropertyType {
 		case "String":
-			properties, err := GetStringProperty(property.PropertyId)
+			// getting property values
+			props, err := GetStringProperty(property.PropertyId)
 			if err != nil {
-				fmt.Printf("Ошибка: %v\n\r", err)
 				return fmt.Errorf("failed to get sting customer property (id=%d): %v", property.PropertyId, err)
 			}
-			//fmt.Printf("Получено строковых свойств %s: %d\n\r", property.Name, len(properties))
-			fmt.Printf("Filling string property values: id=%d, name=%s, amount=%d\n", property.PropertyId, property.Name, len(properties))
+			fmt.Printf("\rFilling PropertyID=%d values: name='%s', type='%s', preset='%s', numbers=%d\n",
+				property.PropertyId, property.Name, property.PropertyType, property.PresetType, len(properties))
+
+			// adding common string property
+			if property.PresetType == "" {
+				for _, prop := range props {
+					customer := customers[prop.CustomerID]
+					value := CustomerPropertyValue{
+						PropertyUID: mappings[PropertyIDs][property.Name],
+						StringValue: &prop.StringValue,
+					}
+					customer.CustomerPropertyValues = append(customer.CustomerPropertyValues, value)
+					customers[prop.CustomerID] = customer
+				}
+			}
 
 			// preset type PHONE
 			if property.PresetType == "PHONE" {
-				for _, prop := range properties {
+				for _, prop := range props {
 					customer := customers[prop.CustomerID]
 					customer.Communications = append(customer.Communications, Communication{
 						CommunicationChanelType: CommunicationChanelTypePhone,
@@ -53,7 +82,7 @@ func ExportCustomers() error {
 
 			// preset type EMAIL
 			if property.PresetType == "EMAIL" {
-				for _, prop := range properties {
+				for _, prop := range props {
 					customer := customers[prop.CustomerID]
 					customer.Communications = append(customer.Communications, Communication{
 						CommunicationChanelType: CommunicationChanelTypeEmail,
@@ -63,43 +92,36 @@ func ExportCustomers() error {
 					customers[prop.CustomerID] = customer
 				}
 			}
-
-			// common string property
-			if property.PresetType == "" {
-				for _, prop := range properties {
-					customer := customers[prop.CustomerID]
-					customer.CustomerPropertyValues = []CustomerPropertyValue{{
-						PropertyUID:   fmt.Sprintf("%sID", property.Name),
-						PropertyName:  property.Name,
-						PropertyValue: prop.StringValue,
-					}}
-					customers[prop.CustomerID] = customer
-				}
-			}
-
 		case "Date":
 			props, err := GetDateProperties(property.PropertyId)
 			if err != nil {
 				return fmt.Errorf("failed to %v", err)
 			}
-			//
+			fmt.Printf("Filling PropertyID=%d values: name='%s', type='%s', preset='%s', numbers=%d\n",
+				property.PropertyId, property.Name, property.PropertyType, property.PresetType, len(properties))
+
+			// adding date property values
+			if property.PresetType == "" {
+				for _, prop := range props {
+					customer := customers[prop.CustomerID]
+					value := CustomerPropertyValue{
+						PropertyUID: mappings[PropertyIDs][property.Name],
+						DateValue:   &prop.DateValue,
+					}
+					customer.CustomerPropertyValues = append(customer.CustomerPropertyValues, value)
+					customers[prop.CustomerID] = customer
+				}
+			}
+
+			// adding preset DOB property values
 			if property.PresetType == "DOB" {
 				for _, prop := range props {
 					cus := customers[prop.CustomerID]
 					cus.DOB = prop.DateValue
 					customers[prop.CustomerID] = cus
 				}
-			} else {
-				for _, prop := range props {
-					customer := customers[prop.CustomerID]
-					customer.CustomerPropertyValues = append(customer.CustomerPropertyValues, CustomerPropertyValue{
-						PropertyUID:   fmt.Sprintf("%sID", property.Name),
-						PropertyName:  property.Name,
-						PropertyValue: "",
-					})
-					customers[prop.CustomerID] = customer
-				}
 			}
+
 		case "Boolean":
 
 			// getting boolean property values
@@ -112,11 +134,11 @@ func ExportCustomers() error {
 			// filling properties
 			for _, prop := range props {
 				customer := customers[prop.CustomerID]
-				customer.CustomerPropertyValues = append(customer.CustomerPropertyValues, CustomerPropertyValue{
-					PropertyUID:   "",
-					PropertyName:  property.Name,
-					PropertyValue: fmt.Sprintf("%t", prop.BoolValue),
-				})
+				value := CustomerPropertyValue{
+					PropertyUID:  mappings[PropertyIDs][property.Name],
+					BooleanValue: &prop.BoolValue,
+				}
+				customer.CustomerPropertyValues = append(customer.CustomerPropertyValues, value)
 				customers[prop.CustomerID] = customer
 			}
 
@@ -153,77 +175,67 @@ func ExportCustomers() error {
 			if err != nil {
 				return fmt.Errorf("failed to get enum property (id=%d) %v\n", property.PropertyId, err)
 			}
-			fmt.Printf("Filling enum property values: id=%d, name=%s, amount=%d\n", property.PropertyId, property.Name, len(props))
+			fmt.Printf("\rFilling PropertyID=%d values: name='%s', type='%s', preset='%s', numbers=%d\n",
+				property.PropertyId, property.Name, property.PropertyType, property.PresetType, len(props))
 
-			// reading mappings
-			var mappings = EnumProperties{}
-			err = ObjectRead(&mappings, FileMappingEnumValues)
-			if err != nil {
-				return fmt.Errorf("failed to read mapping enum properties: %v\n", err)
+			// adding enum customer property values
+			if property.PresetType == "" {
+				for _, prop := range props {
+					//fmt.Printf("\rAdding enum values %d", i+1)
+					customer := customers[prop.CustomerID]
+					//mapping := mappings[property.Name]
+					//propid := prop.EnumValue
+					e := mappings[property.Name][prop.EnumValue]
+					//fmt.Printf("\npropid: %s\n", propid)
+					//fmt.Printf("enum: %s\n", value)
+
+					value := CustomerPropertyValue{
+						PropertyUID:         mappings[PropertyIDs][property.Name],
+						EnumPropertyValueId: &e,
+					}
+					customer.CustomerPropertyValues = append(customer.CustomerPropertyValues, value)
+					customers[prop.CustomerID] = customer
+				}
 			}
 
 			// filling properties
 			if property.PresetType == "GENDER" {
-				fmt.Printf("Property is preset type GENDER\n")
 				for _, prop := range props {
+					//fmt.Printf("\rAdding gender values %d", i)
 					customer := customers[prop.CustomerID]
 					var gender = mappings[property.Name][prop.EnumValue]
 					customer.Gender = &gender
-					//fmt.Printf("%d -> %v\n", prop.CustomerID, &gender)
-					customers[prop.CustomerID] = customer
-				}
-			} else {
-				fmt.Printf("Property is not preset type (name=%s)\n", property.Name)
-				for _, prop := range props {
-					customer := customers[prop.CustomerID]
-					customer.CustomerPropertyValues = append(customer.CustomerPropertyValues, CustomerPropertyValue{
-						PropertyUID:   fmt.Sprintf("%sID", property.Name),
-						PropertyName:  property.Name,
-						PropertyValue: mappings[property.Name][prop.EnumValue],
-					})
 					customers[prop.CustomerID] = customer
 				}
 			}
-			fmt.Printf("Property values (PropertyID=%d) filled\n", property.PropertyId)
 		}
-
 	}
 
 	// filling localities uid from mapping
-	var localities = Localities{}
-	err = ObjectRead(&localities, FileLocalities)
-	if err != nil {
-		return err
-	}
-	for _, customer := range customers {
-		if customer.localityID != "" {
-			var uid = localities[customer.localityID]
-			customer.TerritorialDivisionId = &uid
-			customers[customer.CustomerID] = customer
-		}
-	}
+	//var localities = Localities{}
+	//err = ObjectRead(&localities, FileMappingCustomers)
+	//if err != nil {
+	//	return err
+	//}
+	//for _, customer := range customers {
+	//
+	//}
 
 	// transform object & setting other properties
 	var out []Customer
 	for _, customer := range customers {
+		fmt.Printf("\rTransforming CustomerID: %s", customer.CustomerID)
+
 		//
-		customer.InteractionChannel = "UserInterface"
-		//
-		if *customer.SecretCode == "" {
-			customer.SecretCode = nil
-		}
-		if *customer.FirstName == "" {
-			customer.FirstName = nil
-		}
-		if *customer.SecondName == "" {
-			customer.SecondName = nil
-		}
-		if *customer.LastName == "" {
-			customer.LastName = nil
+		if customer.localityID != "" {
+			var uid = mappings[LocalitiesID][customer.localityID]
+			customer.TerritorialDivisionId = &uid
+			customers[customer.CustomerID] = customer
 		}
 
 		out = append(out, customer)
 	}
+	fmt.Printf("\n")
 
 	err = WriteObject(out, FileCustomers)
 	if err != nil {

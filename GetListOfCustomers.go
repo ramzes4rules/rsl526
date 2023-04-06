@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"time"
 )
 
@@ -27,11 +26,6 @@ type Customer struct {
 	SendingVirtualCopyCheque bool                    `json:"sendingVirtualCopyCheque"`
 }
 type Customers map[string]Customer
-type CustomerPropertyValue struct {
-	PropertyUID   string
-	PropertyName  string
-	PropertyValue string
-}
 
 type Communication struct {
 	CommunicationChanelType CommunicationChanelType `json:"communicationChanelType"`
@@ -58,7 +52,7 @@ func GetListOfCustomers() (Customers, error) {
 	// executing request
 	rows, err := db.Query("SELECT CU.CustomerID, COALESCE(CU.FirstName, ''), COALESCE(CU.SecondName, ''), COALESCE(CU.LastName, ''), COALESCE(L.Name, ''), COALESCE(CU.SecretCode, ''), CU.CreatedDate FROM Customers CU LEFT JOIN Localities L on CU.LocalityID = L.LocalityID WHERE CU.IsDeleted = 0")
 	if err != nil {
-		log.Fatal(err)
+		return Customers{}, err
 	}
 	defer rows.Close()
 
@@ -78,6 +72,25 @@ func GetListOfCustomers() (Customers, error) {
 	if err != nil {
 		fmt.Println(err)
 		return Customers{}, err
+	}
+
+	for id, customer := range customers {
+		//
+		customer.InteractionChannel = "UserInterface"
+		//
+		if *customer.SecretCode == "" {
+			customer.SecretCode = nil
+		}
+		if *customer.FirstName == "" {
+			customer.FirstName = nil
+		}
+		if *customer.SecondName == "" {
+			customer.SecondName = nil
+		}
+		if *customer.LastName == "" {
+			customer.LastName = nil
+		}
+		customers[id] = customer
 	}
 
 	return customers, nil
