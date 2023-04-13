@@ -8,8 +8,8 @@ import (
 func GetListOfDiscountCardGroups() (DiscountCardMapping, error) {
 
 	// open db connection
-	connString := fmt.Sprintf("server=%s;userid=%s;password=%s;port=%s;database=%s", settings.Host, settings.User, settings.Password, settings.Port, settings.Database)
-	db, connectionError := sql.Open("mssql", connString)
+	//connString := fmt.Sprintf("server=%s;userid=%s;password=%s;port=%s;database=%s", settings.Host, settings.User, settings.Password, settings.Port, settings.Database)
+	db, connectionError := sql.Open("mssql", settings.ConnString)
 	if connectionError != nil {
 		return DiscountCardMapping{}, connectionError
 	}

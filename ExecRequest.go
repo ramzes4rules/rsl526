@@ -2,8 +2,7 @@ package main
 
 import (
 	"crypto/tls"
-	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -24,20 +23,20 @@ func ExecRequest(url string, json string) error {
 	req.Header.Add("Content-Type", "application/json")
 
 	client := &http.Client{}
-	client.Timeout = 10 * time.Second
+	client.Timeout = 20 * time.Second
 
 	res, err := client.Do(req)
 	if err != nil {
 		return err
 	}
 
-	body, err := ioutil.ReadAll(res.Body)
+	_, err = io.ReadAll(res.Body)
 	if err != nil {
 		//fmt.Println(err)
 		return err
 	}
 
-	fmt.Println(string(body))
+	//fmt.Println(string(body))
 	return nil
 
 }

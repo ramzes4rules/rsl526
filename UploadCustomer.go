@@ -34,7 +34,7 @@ func UploadCustomers() error {
 			fmt.Printf("\tFailed to upload customer '%s': %v\n", customers[i].CustomerID, err)
 			continue
 		}
-		fmt.Printf("OK")
+		//fmt.Printf("OK")
 	}
 
 	return nil

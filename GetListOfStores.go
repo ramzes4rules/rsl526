@@ -9,15 +9,15 @@ import (
 func GetListOfStores() (DiscountCardMapping, error) {
 
 	// open db connection
-	connString := fmt.Sprintf("server=%s;userid=%s;password=%s;port=%s;database=%s", settings.Host, settings.User, settings.Password, settings.Port, settings.Database)
+	//connString := fmt.Sprintf("server=%s;userid=%s;password=%s;port=%s;database=%s", settings.Host, settings.User, settings.Password, settings.Port, settings.Database)
 	//fmt.Printf("server=%s;userid=%s;password=%s;port=%s;database=%s", settings.Host, settings.User, settings.Password, settings.Port, settings.Database)
-	db, connectionError := sql.Open("mssql", connString)
+	db, connectionError := sql.Open("mssql", settings.ConnString)
 	if connectionError != nil {
 		return DiscountCardMapping{}, connectionError
 	}
 
 	// executing request
-	rows, err := db.Query("SELECT Name FROM Stores;")
+	rows, err := db.Query("SELECT Name FROM Stores WHERE IsD;")
 	if err != nil {
 		return DiscountCardMapping{}, err
 	}

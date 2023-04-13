@@ -211,36 +211,39 @@ func ExportCustomers() error {
 		}
 	}
 
-	// filling localities uid from mapping
-	//var localities = Localities{}
-	//err = ObjectRead(&localities, FileMappingCustomers)
-	//if err != nil {
-	//	return err
-	//}
-	//for _, customer := range customers {
-	//
-	//}
-
 	// transform object & setting other properties
 	var out []Customer
+	var i = 0
 	for _, customer := range customers {
-		fmt.Printf("\rTransforming CustomerID: %s", customer.CustomerID)
+		i++
+		fmt.Printf("\rTransforming Customer: %d", i)
+
+		//
+		customer.CreatedDate = time.Now()
 
 		//
 		if customer.localityID != "" {
 			var uid = mappings[LocalitiesID][customer.localityID]
 			customer.TerritorialDivisionId = &uid
-			customers[customer.CustomerID] = customer
+			//customers[customer.CustomerID] = customer
+		}
+
+		if customer.Gender == nil {
+			un := "Unknown"
+			customer.Gender = &un
+			//customers[customer.CustomerID] = customer
 		}
 
 		out = append(out, customer)
 	}
 	fmt.Printf("\n")
 
+	fmt.Printf("Writing customers to file...\n")
 	err = WriteObject(out, FileCustomers)
 	if err != nil {
 		return err
 	}
+	fmt.Printf("Done!\n")
 
 	return nil
 }

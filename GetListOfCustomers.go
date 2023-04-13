@@ -42,15 +42,15 @@ const (
 
 func GetListOfCustomers() (Customers, error) {
 	//
-	connString := fmt.Sprintf("server=%s;userid=%s;password=%s;port=%s;database=%s", settings.Host, settings.User, settings.Password, settings.Port, settings.Database)
-	db, connectionError := sql.Open("mssql", connString)
+	//connString := fmt.Sprintf("server=%s;userid=%s;password=%s;port=%s;database=%s", settings.Host, settings.User, settings.Password, settings.Port, settings.Database)
+	db, connectionError := sql.Open("mssql", settings.ConnString)
 	if connectionError != nil {
 		fmt.Println(fmt.Errorf("error opening database: %v", connectionError))
 		return Customers{}, connectionError
 	}
 
 	// executing request
-	rows, err := db.Query("SELECT CU.CustomerID, COALESCE(CU.FirstName, ''), COALESCE(CU.SecondName, ''), COALESCE(CU.LastName, ''), COALESCE(L.Name, ''), COALESCE(CU.SecretCode, ''), CU.CreatedDate FROM Customers CU LEFT JOIN Localities L on CU.LocalityID = L.LocalityID WHERE CU.IsDeleted = 0")
+	rows, err := db.Query("SELECT CU.CustomerID, COALESCE(CU.FirstName, ''), COALESCE(CU.SecondName, ''), COALESCE(CU.LastName, ''), COALESCE(L.Name, ''), COALESCE(CU.SecretCode, '') FROM Customers CU LEFT JOIN Localities L on CU.LocalityID = L.LocalityID WHERE CU.IsDeleted = 0")
 	if err != nil {
 		return Customers{}, err
 	}
@@ -60,7 +60,7 @@ func GetListOfCustomers() (Customers, error) {
 	var customers = Customers{}
 	for rows.Next() {
 		var customer = Customer{}
-		err = rows.Scan(&customer.CustomerID, &customer.FirstName, &customer.SecondName, &customer.LastName, &customer.localityID, &customer.SecretCode, &customer.CreatedDate)
+		err = rows.Scan(&customer.CustomerID, &customer.FirstName, &customer.SecondName, &customer.LastName, &customer.localityID, &customer.SecretCode)
 		if err != nil {
 			fmt.Println(err)
 			continue

@@ -14,6 +14,7 @@ type Settings struct {
 	Password        string
 	Port            string
 	Database        string
+	ConnString      string
 	DestinationHost string
 }
 
@@ -30,14 +31,21 @@ var (
 
 func main() {
 
+	//
 	var err error
 
 	// reading app settings
-	var leho = Leho.Leho{Setting: settings, FileName: ConfigFile}
+	var leho = Leho.Leho{Setting: &settings, FileName: ConfigFile}
 	err = leho.ReadSetting()
 	if err != nil {
 		_ = leho.WriteSetting()
 	}
+	//fmt.Printf("%s\n", settings.Host)
+
+	//
+	settings.ConnString = fmt.Sprintf("odbc:server=%s;user id=%s;password=%s;database=%s;app name=RS.Loyalty",
+		settings.Host, settings.User, settings.Password, settings.Database)
+	//fmt.Printf("ConnString='%s'\n", settings.ConnString)
 
 	// checking number of options
 	if len(os.Args) == 1 {
@@ -196,7 +204,7 @@ func main() {
 		switch option {
 		case "-c":
 			fmt.Printf("Uploading customers...\n")
-			err = UploadCustomers()
+			err = UploadCustomersAsync()
 			if err != nil {
 				fmt.Printf("Failed to upload customers: %v\n", err)
 			} else {
@@ -204,7 +212,7 @@ func main() {
 			}
 		case "-d":
 			fmt.Printf("Uploading discount cards...\n")
-			err = UploadDiscountCards()
+			err = UploadCustomersAsync()
 			if err != nil {
 				fmt.Printf("Failed to upload discount cards: %v\n", err)
 			} else {
@@ -212,7 +220,7 @@ func main() {
 			}
 		case "-a":
 			fmt.Printf("Uploading accounts...\n")
-			err = UploadAccounts()
+			err = UploadCustomersAsync()
 			if err != nil {
 				fmt.Printf("Failed to upload accounts: %v\n", err)
 			} else {

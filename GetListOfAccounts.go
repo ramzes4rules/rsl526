@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 )
 
@@ -11,8 +10,8 @@ type Accounts map[string]Account
 func GetListOfAccounts() (Accounts, error) {
 
 	//
-	connString := fmt.Sprintf("server=%s;userid=%s;password=%s;port=%s;database=%s", settings.Host, settings.User, settings.Password, settings.Port, settings.Database)
-	db, connectionError := sql.Open("mssql", connString)
+	//connString := fmt.Sprintf("server=%s;userid=%s;password=%s;port=%s;database=%s", settings.Host, settings.User, settings.Password, settings.Port, settings.Database)
+	db, connectionError := sql.Open("mssql", settings.ConnString)
 	if connectionError != nil {
 		return Accounts{}, connectionError
 	}
@@ -21,7 +20,7 @@ func GetListOfAccounts() (Accounts, error) {
 	rows, err := db.Query("SELECT DISTINCT DC.AccountID, I.Bonus, " +
 		"(SELECT TOP 1 DiscountCardID FROM DiscountCards WHERE AccountID = DC.AccountID AND DC.IsBlocked = 0 " +
 		"AND DC.IsDeleted = 0 ORDER BY DiscountCardID DESC) FROM DiscountCards DC " +
-		"LEFT JOIN Indicators I on DC.AccountID = I.AccountID WHERE DC.IsBlocked = 0 AND DC.IsDeleted = 0 ORDER BY AccountID;")
+		"LEFT JOIN Indicators I on DC.AccountID = I.AccountID WHERE DC.IsBlocked = 0 AND DC.IsDeleted = 0 AND I.Bonus != 0 ORDER BY AccountID;")
 	if err != nil {
 		return Accounts{}, err
 	}
