@@ -9,16 +9,16 @@ const FileDiscountCards = "discountcards.json"
 func ExportDiscountCards() error {
 
 	// getting list of customers
-	fmt.Printf("Getting list of cards from db... Be patient")
+	fmt.Printf("Getting list of cards from db... Be patient\n")
 	cards, err := GetListOfDiscountCards()
 	if err != nil {
-		fmt.Printf("Error getting list of customers: %v", err)
+		fmt.Printf("Error getting list of customers: %v\n", err)
 		return err
 	}
 	fmt.Printf("Number of discount cards got: %d\n", len(cards))
 
 	// getting discount card group values
-	fmt.Printf("Getting list of discount card groups from db... Also be patient")
+	fmt.Printf("Getting list of discount card groups from db... Also be patient\n")
 	groups, err := GetDiscountCardGroups()
 	if err != nil {
 		return err
@@ -65,12 +65,12 @@ func ExportDiscountCards() error {
 		i++
 	}
 
-	fmt.Printf("\nWriting cards to file... Be patient last time")
+	fmt.Printf("\nWriting cards to file... Be patient last time\n")
 	err = WriteObject(out, FileDiscountCards)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Discount cards exported!")
+	fmt.Printf("Discount cards exported!\n")
 
 	return nil
 }

@@ -212,7 +212,7 @@ func main() {
 			}
 		case "-d":
 			fmt.Printf("Uploading discount cards...\n")
-			err = UploadCustomersAsync()
+			err = UploadDiscountCardsAsync()
 			if err != nil {
 				fmt.Printf("Failed to upload discount cards: %v\n", err)
 			} else {
@@ -220,7 +220,7 @@ func main() {
 			}
 		case "-a":
 			fmt.Printf("Uploading accounts...\n")
-			err = UploadCustomersAsync()
+			err = UploadAccountsAsync()
 			if err != nil {
 				fmt.Printf("Failed to upload accounts: %v\n", err)
 			} else {
@@ -229,7 +229,7 @@ func main() {
 		default:
 			//
 			fmt.Printf("Uploading customers...\n")
-			err = UploadCustomers()
+			err = UploadCustomersAsync()
 			if err != nil {
 				fmt.Printf("Failed to upload customers: %v\n", err)
 			} else {
@@ -238,7 +238,7 @@ func main() {
 
 			//
 			fmt.Printf("Uploading discount cards...\n")
-			err = UploadDiscountCards()
+			err = UploadDiscountCardsAsync()
 			if err != nil {
 				fmt.Printf("Failed to upload discount cards: %v\n", err)
 			} else {
@@ -247,7 +247,7 @@ func main() {
 
 			//_ = ExportAccounts()
 			fmt.Printf("Uploading accounts...\n")
-			err = UploadAccounts()
+			err = UploadAccountsAsync()
 			if err != nil {
 				fmt.Printf("Failed to upload accounts: %v\n", err)
 			} else {

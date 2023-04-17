@@ -17,7 +17,7 @@ func GetListOfStores() (DiscountCardMapping, error) {
 	}
 
 	// executing request
-	rows, err := db.Query("SELECT Name FROM Stores WHERE IsD;")
+	rows, err := db.Query("SELECT Name FROM Stores;")
 	if err != nil {
 		return DiscountCardMapping{}, err
 	}

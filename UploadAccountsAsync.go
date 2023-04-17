@@ -7,18 +7,19 @@ import (
 	"time"
 )
 
+var waitGroup sync.WaitGroup
+
 func UploadAccountsAsync() error {
 
 	//
 	var timer time.Time
 	var global time.Time
-	var waitGroup sync.WaitGroup
-	var numbers = 40
+
+	var numbers = 100
 	var cycleNumbers int
 	url := fmt.Sprintf("%s/api/accounts/accrual_to_loyalty_card", settings.DestinationHost)
 
 	//
-	global = time.Now()
 
 	// loading list of accounts
 	fmt.Printf("Load account fro file %s. Be patient...", FileAccounts)
@@ -34,6 +35,7 @@ func UploadAccountsAsync() error {
 		cycleNumbers++
 	}
 
+	global = time.Now()
 	timer = time.Now()
 	for i := 0; i < cycleNumbers; i++ {
 		timer = time.Now()
@@ -44,6 +46,7 @@ func UploadAccountsAsync() error {
 				fmt.Printf("\tFailed to serialize account customer: '%s': %v\n", accounts[i+j].LoyaltyCardId, err)
 				continue
 			}
+			//var channel = make(chan struct{})
 			go func(url string, customer []byte, number int) {
 				defer waitGroup.Done()
 				//fmt.Printf("Uploading customer: %d\n", number)
@@ -53,6 +56,7 @@ func UploadAccountsAsync() error {
 					return
 				}
 			}(url, customer, i+j)
+			//<-channel
 		}
 		waitGroup.Wait()
 		fmt.Printf("Cyrcle %d. Uploaded accounts from %d to %d. Time: %f, total time: %f minutes\n",
