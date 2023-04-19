@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
@@ -11,57 +13,69 @@ var waitGroup sync.WaitGroup
 
 func UploadAccountsAsync() error {
 
-	//
+	// declare variables
 	var timer time.Time
 	var global time.Time
+	var loopNumbers int
+	var results = make(chan error)
+	var url = fmt.Sprintf("%s/api/accounts/accrual_to_loyalty_card", settings.DestinationHost)
 
-	var numbers = 100
-	var cycleNumbers int
-	url := fmt.Sprintf("%s/api/accounts/accrual_to_loyalty_card", settings.DestinationHost)
+	// print start time
+	fmt.Printf("Start time: %s\n", time.Now().Format(time.ANSIC))
 
-	//
-
-	// loading list of accounts
-	fmt.Printf("Load account fro file %s. Be patient...", FileAccounts)
-	var accounts []Account
-	err := ObjectRead(&accounts, FileAccounts)
-	if err != nil {
-		return err
+	// search file(s) to load
+	files, _ := filepath.Glob(fmt.Sprintf("%s_?????%s", strings.TrimSuffix(FileAccounts, filepath.Ext(FileAccounts)), filepath.Ext(FileAccounts)))
+	if len(files) == 0 {
+		files, _ = filepath.Glob(FileAccounts)
 	}
-	fmt.Printf("Loaded accounts numbers: %d", len(accounts))
-
-	cycleNumbers = len(accounts) / numbers
-	if len(accounts)%numbers != 0 {
-		cycleNumbers++
+	if len(files) == 0 {
+		return fmt.Errorf("files for loading not found")
 	}
 
-	global = time.Now()
-	timer = time.Now()
-	for i := 0; i < cycleNumbers; i++ {
-		timer = time.Now()
-		for j := 0; j < numbers; j++ {
-			waitGroup.Add(1)
-			var customer, err = json.MarshalIndent(accounts[i+j], "", "\t")
-			if err != nil {
-				fmt.Printf("\tFailed to serialize account customer: '%s': %v\n", accounts[i+j].LoyaltyCardId, err)
-				continue
-			}
-			//var channel = make(chan struct{})
-			go func(url string, customer []byte, number int) {
-				defer waitGroup.Done()
-				//fmt.Printf("Uploading customer: %d\n", number)
-				err := ExecRequest(url, string(customer))
-				if err != nil {
-					fmt.Printf("\tFailed to upload account '%d': %v\n", number, err)
-					return
-				}
-			}(url, customer, i+j)
-			//<-channel
+	for _, file := range files {
+
+		// read file
+		fmt.Printf("Loading account from file %s\n", file)
+		var accounts []Account
+		err := ObjectRead(&accounts, file)
+		if err != nil {
+			return err
 		}
-		waitGroup.Wait()
-		fmt.Printf("Cyrcle %d. Uploaded accounts from %d to %d. Time: %f, total time: %f minutes\n",
-			i+1, i*numbers+1, i*numbers+numbers, time.Since(timer).Seconds(), time.Since(global).Minutes())
-	}
+		fmt.Printf("Accounts loaded: %d", len(accounts))
 
+		// calculate cycles numbers
+		loopNumbers = len(accounts) / settings.PacketSize
+		if len(accounts)%settings.PacketSize != 0 {
+			loopNumbers++
+		}
+
+		// run loop
+		global = time.Now()
+		for i := 0; i < loopNumbers; i++ {
+			timer = time.Now()
+
+			end := settings.PacketSize
+			if i+1 == loopNumbers {
+				end = len(accounts) % settings.PacketSize
+			}
+
+			for j := 0; j < end; j++ {
+				var customer, _ = json.MarshalIndent(accounts[i*settings.PacketSize+j], "", "\t")
+				go ExecRequest2(url, string(customer), results)
+			}
+
+			for j := 0; j < end; j++ {
+				err = <-results
+				if err != nil {
+					fmt.Printf("Error: %v", err)
+				}
+			}
+
+			fmt.Printf("\rCyrcle %09d. Uploaded cards from %09d to %09d. Time: %05d ms, total: %05.2f min, average: %05.2f objects/second",
+				i+1, i*settings.PacketSize+1, i*settings.PacketSize+settings.PacketSize, time.Since(timer).Milliseconds(),
+				time.Since(global).Minutes(), float64(i*settings.PacketSize+settings.PacketSize)/time.Since(global).Seconds())
+
+		}
+	}
 	return nil
 }

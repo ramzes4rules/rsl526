@@ -20,11 +20,12 @@ func UploadCustomersAsync() error {
 	var url = fmt.Sprintf("%s/api/customers/customer_import", settings.DestinationHost)
 
 	// creat pool clients
-	for i := 0; i < numbers; i++ {
-		clients = append(clients, NewClient())
-	}
+	//for i := 0; i < numbers; i++ {
+	//	clients = append(clients, NewClient())
+	//}
 
 	// read customers file
+	fmt.Printf("Time start: %s\n", time.Now().Format(time.ANSIC))
 	fmt.Printf("Reading customers file. Be patient...\n")
 	var customers []Customer
 	err := ObjectRead(&customers, FileCustomers)
@@ -44,27 +45,32 @@ func UploadCustomersAsync() error {
 		timer = time.Now()
 		for j := 0; j < numbers; j++ {
 			waitGroup.Add(1)
-			var customer, err = json.MarshalIndent(customers[i+j], "", "\t")
+			var customer, err = json.MarshalIndent(customers[i*numbers+j], "", "\t")
 			if err != nil {
 				fmt.Printf("\tFailed to serialize customer '%s': %v\n", customers[i+j].CustomerID, err)
 				continue
 			}
 			//var channel = make(chan struct{})
+			j := j
 			go func(url string, customer []byte, number int) {
 				//err := ExecRequest2(clients[j], url, string(customer))
+				//fmt.Printf("i=%d, j=%d\n", i, j)
+
 				err := ExecRequest(url, string(customer))
+
 				if err != nil {
 					fmt.Printf("\tFailed to upload customer '%d': %v\n", number, err)
 					return
 				}
 				waitGroup.Done()
-			}(url, customer, i+j)
+			}(url, customer, i*numbers+j)
 			//<-channel
 		}
 		waitGroup.Wait()
-		fmt.Printf("Cyrcle %d. Uploaded customers from %d to %d. Time: %f, aver: %6.2f, total time: %10.2f minutes\n",
-			i+1, i*numbers+1, i*numbers+numbers, time.Since(timer).Seconds(), float64(numbers)/time.Since(timer).Seconds(), time.Since(global).Minutes())
+		fmt.Printf("\rCyrcle %d. Uploaded customers from %d to %d. Time: %d ms, total: %10.2f min, average: %4.2f objects/second",
+			i+1, i*numbers+1, i*numbers+numbers, time.Since(timer).Milliseconds(), time.Since(global).Minutes(), float64(i*numbers+numbers)/time.Since(global).Seconds())
 	}
 
+	fmt.Printf("Time finish: %s\n", time.Now().Format(time.ANSIC))
 	return nil
 }

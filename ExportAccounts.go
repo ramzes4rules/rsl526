@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -35,17 +37,41 @@ func ExportAccounts() error {
 	fmt.Printf("Got account mappins numbers: %d\n", len(mappings))
 
 	// transforming list
+	fmt.Printf("Transforming accounts")
 	var out []Account
 	for _, account := range accounts {
 		account.CurrencyId = mappings[CurrencyId][CurrencyId]
 		out = append(out, account)
 	}
+	fmt.Printf("Accounts transformed")
 
-	fmt.Printf("Writing accounts to file: '%s'\n", FileAccounts)
-	err = WriteObject(out, FileAccounts)
-	if err != nil {
-		return err
+	// write accounts to file(s)
+	fmt.Printf("Writing accounts to file(s). Be patient\n")
+	if settings.SplitNumbers == 0 {
+		fmt.Printf("Creating single file '%s'\n", FileAccounts)
+		err = WriteObject(out, FileAccounts)
+		if err != nil {
+			return err
+		}
+	} else {
+		numbers := len(out) / settings.SplitNumbers
+		if len(out)%numbers != 0 {
+			numbers++
+		}
+		for i := 0; i < numbers; i++ {
+			name := fmt.Sprintf("%s_%05d%s", strings.TrimSuffix(FileAccounts, filepath.Ext(FileAccounts)), i, filepath.Ext(FileAccounts))
+			end := i*settings.SplitNumbers + settings.SplitNumbers - 1
+			if end > len(out) {
+				end = len(out)
+			}
+			part := out[i*settings.SplitNumbers : end]
+			fmt.Printf("Creating file '%s'\n", name)
+			err = WriteObject(part, name)
+			if err != nil {
+				return err
+			}
+		}
 	}
-	//fmt.Printf("Done")
+	fmt.Printf("File(s) created\n")
 	return nil
 }

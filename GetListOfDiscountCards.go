@@ -89,9 +89,9 @@ func GetListOfDiscountCards() (DiscountCards, error) {
 			discountcard.PinCode = nil
 		}
 		//fmt.Printf("---> %s\n", discountcard.ActivationDate.Format("2006-01-02T15:04:05"))
-		if discountcard.ActivationDate.Format("2006-01-02T15:04:05") == "1900-01-01T00:00:00" {
-			discountcard.ActivationDate = time.Now()
-		}
+		//if discountcard.ActivationDate.Format("2006-01-02T15:04:05") == "1900-01-01T00:00:00" {
+		discountcard.ActivationDate = time.Now()
+		//}
 
 		dicountCards[id] = discountcard
 

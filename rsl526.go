@@ -16,6 +16,8 @@ type Settings struct {
 	Database        string
 	ConnString      string
 	DestinationHost string
+	SplitNumbers    int
+	PacketSize      int
 }
 
 var (
@@ -26,6 +28,8 @@ var (
 		Port:            "1433",
 		Database:        "RSL_Afanasiy",
 		DestinationHost: "https://10.14.5.127:7008",
+		SplitNumbers:    100000,
+		PacketSize:      10,
 	}
 )
 
@@ -212,7 +216,7 @@ func main() {
 			}
 		case "-d":
 			fmt.Printf("Uploading discount cards...\n")
-			err = UploadDiscountCardsAsync()
+			err = UploadDiscountCardsAsyncC()
 			if err != nil {
 				fmt.Printf("Failed to upload discount cards: %v\n", err)
 			} else {
@@ -238,7 +242,7 @@ func main() {
 
 			//
 			fmt.Printf("Uploading discount cards...\n")
-			err = UploadDiscountCardsAsync()
+			err = UploadDiscountCardsAsyncC()
 			if err != nil {
 				fmt.Printf("Failed to upload discount cards: %v\n", err)
 			} else {
