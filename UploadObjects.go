@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	_ "go/types"
 	"path/filepath"
@@ -24,8 +23,8 @@ func UploadObjects(url string, filename string) error {
 	var filetimer time.Time
 	var global time.Time
 	var loopNumbers int
-	var result = make(chan error)
-	var errors []error
+	var result = make(chan *ErrorInfo)
+	var errors []ErrorInfo
 	fmt.Printf("Use url for loading: %s\n", url)
 	fmt.Printf("Use packet size: %d\n", settings.PacketSize)
 
@@ -77,36 +76,42 @@ func UploadObjects(url string, filename string) error {
 				end = len(objs) % settings.PacketSize
 			}
 			for j := 0; j < end; j++ {
-				var obj, _ = json.MarshalIndent(objs[i*settings.PacketSize+j], "", "\t")
-				go ExecRequest2(url, string(obj), result)
+				go ExecRequest(url, objs[i*settings.PacketSize+j], result)
 			}
 
 			// waiting for result
 			for j := 0; j < end; j++ {
-				err = <-result
-				if err != nil {
-					errors = append(errors, err)
+				errR := <-result
+				if errR != nil {
+					if errR.Error != "" && errR.Object != "" {
+						errors = append(errors, *errR)
+					}
 				}
 			}
-			fmt.Printf("\rLoop %06d/%06d. Uploaded objects %06d - %06d. Time: %05.4f s, total: %05.4f s, aver: %05.0f objs/sec",
-				i+1, loopNumbers, i*settings.PacketSize+1, i*settings.PacketSize+settings.PacketSize, time.Since(timer).Seconds(),
-				time.Since(filetimer).Seconds(), float64(i*settings.PacketSize+settings.PacketSize)/time.Since(filetimer).Seconds())
+
+			// print results
+			fmt.Printf("\rLoop %06d/%06d. Uploaded objects %06d - %06d. Time: %05.4f s, total: %05.4f m, aver: %03.0f objs/sec",
+				i+1, loopNumbers, i*settings.PacketSize+1, i*settings.PacketSize+end, time.Since(timer).Seconds(),
+				time.Since(filetimer).Minutes(), float64(i*settings.PacketSize+settings.PacketSize)/time.Since(filetimer).Seconds())
 
 		}
 		fmt.Printf("\n")
 
 		//
-		fmt.Printf("Objects from file %s uploaded in %04.20f minutes, %05.2f objects/second\n",
+		fmt.Printf("Objects from file %s uploaded in %04.02f minutes, %05.02f objects/second\n",
 			file, time.Since(filetimer).Minutes(), float64(len(objs))/time.Since(filetimer).Seconds())
 
 	}
 
-	fmt.Printf("Time finish: %s\n", time.Now().Format(time.ANSIC))
-	fmt.Printf("Uploading completed in %04.20f minutes\n", time.Since(global).Minutes())
+	fmt.Printf("Upload completed in %04.02f minutes\n", time.Since(global).Minutes())
 	if len(errors) > 0 {
-		fmt.Printf("Got uploading error number: %d", len(errors))
-		_ = WriteObject(errors, "errors.log")
+		fmt.Printf("Got uploading error number: %d\n", len(errors))
+		err := WriteObject(errors, "errors.log")
+		if err != nil {
+			fmt.Printf("%v", err)
+		}
 	}
 
+	fmt.Printf("Time finish: %s\n", time.Now().Format(time.ANSIC))
 	return nil
 }

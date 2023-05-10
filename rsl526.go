@@ -210,7 +210,9 @@ func main() {
 		switch option {
 		case "-c":
 			fmt.Printf("Uploading customers...\n")
-			err = UploadCustomersAsync()
+			//err = UploadCustomersAsync()
+			var url = fmt.Sprintf("%s/api/customers/customer_import", settings.DestinationHost)
+			err := UploadObjects(url, FileCustomers)
 			if err != nil {
 				fmt.Printf("Failed to upload customers: %v\n", err)
 			} else {
@@ -228,39 +230,16 @@ func main() {
 			}
 		case "-a":
 			fmt.Printf("Uploading accounts...\n")
-			err = UploadAccountsAsync()
+			var url = fmt.Sprintf("%s/api/accounts/accrual_to_loyalty_card", settings.DestinationHost)
+			err := UploadObjects(url, FileAccounts)
+			//err = UploadAccountsAsync()
 			if err != nil {
 				fmt.Printf("Failed to upload accounts: %v\n", err)
 			} else {
 				fmt.Printf("Accounts uploaded\n")
 			}
 		default:
-			//
-			fmt.Printf("Uploading customers...\n")
-			err = UploadCustomersAsync()
-			if err != nil {
-				fmt.Printf("Failed to upload customers: %v\n", err)
-			} else {
-				fmt.Printf("Customers uploaded\n")
-			}
-
-			//
-			fmt.Printf("Uploading discount cards...\n")
-			err = UploadDiscountCardsAsyncC()
-			if err != nil {
-				fmt.Printf("Failed to upload discount cards: %v\n", err)
-			} else {
-				fmt.Printf("Discount cards uploaded\n")
-			}
-
-			//_ = ExportAccounts()
-			fmt.Printf("Uploading accounts...\n")
-			err = UploadAccountsAsync()
-			if err != nil {
-				fmt.Printf("Failed to upload accounts: %v\n", err)
-			} else {
-				fmt.Printf("Accounts uploaded\n")
-			}
+			fmt.Println(usage)
 		}
 
 	default:

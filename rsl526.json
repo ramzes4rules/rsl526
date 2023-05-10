@@ -1,0 +1,11 @@
+{
+	"Host": "127.0.0.1",
+	"User": "sa",
+	"Password": "System775",
+	"Port": "1433",
+	"Database": "RS_LOYALTY_5_10_3_6129",
+	"DestinationHost": "https://10.14.5.127:7008",
+	"Timeout": 10,
+	"SplitNumbers": 100000,
+	"PacketSize": 5
+}
