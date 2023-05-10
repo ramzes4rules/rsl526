@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -9,17 +10,18 @@ import (
 	"time"
 )
 
-func ExecRequest2(url string, json string, channel chan error) {
+func ExecRequest2(url string, object string, channel chan error) {
 
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	method := "POST"
-	payload := strings.NewReader(json)
+	payload := strings.NewReader(object)
 
 	//
 	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
 		channel <- err
+		return
 	}
 
 	//
@@ -27,57 +29,60 @@ func ExecRequest2(url string, json string, channel chan error) {
 
 	//
 	client := &http.Client{}
-	client.Timeout = 5 * time.Second
+	client.Timeout = time.Duration(settings.Timeout) * time.Second
 
 	// call request
-	_, err = client.Do(req)
-	if err != nil {
-		fmt.Printf("Exec request error: %v\n", err)
-		channel <- err
-	}
-
-	//if res.StatusCode != 200 {
-	//	body, err := io.ReadAll(res.Body)
-	//	if err != nil {
-	//		channel <- err
-	//	}
-	//	//fmt.Printf("\nBody: %s\n", string(body))
-	//	channel <- fmt.Errorf("%s", string(body))
-	//}
-	channel <- nil
-}
-
-func ExecRequest(url string, json string) error {
-
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-
-	method := "POST"
-	payload := strings.NewReader(json)
-
-	req, err := http.NewRequest(method, url, payload)
-	if err != nil {
-		return err
-	}
-
-	req.Header.Add("Content-Type", "application/json")
-
-	client := &http.Client{}
-	client.Timeout = 20 * time.Second
-
-	// executing request
 	res, err := client.Do(req)
 	if err != nil {
-		return err
+		//fmt.Printf("Exec request error: %v\n", err)
+		channel <- err
+		return
 	}
-	//fmt.Printf("Request executed in %d ms\n", time.Since(timer).Milliseconds())
 
 	if res.StatusCode != 200 {
 		body, err := io.ReadAll(res.Body)
 		if err != nil {
-			return fmt.Errorf("%s", body)
+			channel <- err
+			return
 		}
+		var response, _ = json.MarshalIndent(map[string]string{"Object": object, "Error": string(body)}, "", "\t")
+		channel <- fmt.Errorf(string(response))
+		return
 	}
-
-	return nil
-
+	channel <- nil
+	return
 }
+
+//func ExecRequest(url string, json string) error {
+//
+//	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+//
+//	method := "POST"
+//	payload := strings.NewReader(json)
+//
+//	req, err := http.NewRequest(method, url, payload)
+//	if err != nil {
+//		return err
+//	}
+//
+//	req.Header.Add("Content-Type", "application/json")
+//
+//	client := &http.Client{}
+//	client.Timeout = 20 * time.Second
+//
+//	// executing request
+//	res, err := client.Do(req)
+//	if err != nil {
+//		return err
+//	}
+//
+//	// parsing response
+//	if res.StatusCode != 200 {
+//		body, err := io.ReadAll(res.Body)
+//		if err != nil {
+//			return fmt.Errorf("%s", err)
+//		}
+//		return fmt.Errorf("Failed to load:\n %s\nerror: %s", json, string(body))
+//	}
+//	return nil
+//}

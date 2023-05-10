@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -236,14 +238,38 @@ func ExportCustomers() error {
 
 		out = append(out, customer)
 	}
-	fmt.Printf("\n")
+	fmt.Printf("\nList of customers transormed\n")
 
-	fmt.Printf("Writing customers to file...\n")
-	err = WriteObject(out, FileCustomers)
-	if err != nil {
-		return err
+	// write list of customer to file(s)
+	fmt.Printf("Writing list of customers to file...\n")
+	if settings.SplitNumbers == 0 {
+		fmt.Printf("Creating a single file '%s'\n", FileAccounts)
+		err = WriteObject(out, FileCustomers)
+		if err != nil {
+			return err
+		}
+	} else {
+		// calculate number of files
+		numbers := len(out) / settings.SplitNumbers
+		if len(out)%numbers != 0 {
+			numbers++
+		}
+
+		// write files in loop
+		for i := 0; i < numbers; i++ {
+			name := fmt.Sprintf("%s_%05d%s", strings.TrimSuffix(FileCustomers, filepath.Ext(FileCustomers)), i, filepath.Ext(FileCustomers))
+			end := i*settings.SplitNumbers + settings.SplitNumbers
+			if end > len(out) {
+				end = len(out)
+			}
+			part := out[i*settings.SplitNumbers : end]
+			fmt.Printf("Creating file '%s'\n", name)
+			err = WriteObject(part, name)
+			if err != nil {
+				return err
+			}
+		}
 	}
-	fmt.Printf("Done!\n")
-
+	fmt.Printf("File(s) created\n")
 	return nil
 }

@@ -28,7 +28,7 @@ func GetListOfProperties() ([]Property, error) {
 	//
 	//connString := fmt.Sprintf("server=%s;userid=%s;password=%s;port=%s;database=%s", settings.Host, settings.User, settings.Password, settings.Port, settings.Database)
 	//fmt.Println(connString)
-	db, connectionError := sql.Open("mssql", settings.ConnString)
+	db, connectionError := sql.Open("mssql", settings.connString)
 	if connectionError != nil {
 		fmt.Println(fmt.Errorf("error opening database: %v", connectionError))
 		return []Property{}, connectionError

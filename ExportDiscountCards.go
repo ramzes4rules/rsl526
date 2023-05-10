@@ -91,7 +91,7 @@ func ExportDiscountCards() error {
 		fmt.Printf("Creating %d files\n", numbers)
 		for i := 0; i < numbers; i++ {
 			name := fmt.Sprintf("%s_%05d%s", strings.TrimSuffix(FileDiscountCards, filepath.Ext(FileDiscountCards)), i, filepath.Ext(FileDiscountCards))
-			end := i*settings.SplitNumbers + settings.SplitNumbers - 1
+			end := i*settings.SplitNumbers + settings.SplitNumbers
 			if end > len(out) {
 				end = len(out)
 			}

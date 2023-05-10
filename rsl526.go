@@ -14,22 +14,24 @@ type Settings struct {
 	Password        string
 	Port            string
 	Database        string
-	ConnString      string
+	connString      string
 	DestinationHost string
+	Timeout         int
 	SplitNumbers    int
 	PacketSize      int
 }
 
 var (
 	settings = Settings{
-		Host:            "afanasy.retailloyalty.ru",
-		User:            "loy",
-		Password:        "M92bv1Dv3fss",
+		Host:            "127.0.0.1",
+		User:            "sa",
+		Password:        "System775",
 		Port:            "1433",
-		Database:        "RSL_Afanasiy",
+		Database:        "RS_LOYALTY_5_10_3_6129",
 		DestinationHost: "https://10.14.5.127:7008",
+		Timeout:         10,
 		SplitNumbers:    100000,
-		PacketSize:      10,
+		PacketSize:      5,
 	}
 )
 
@@ -39,15 +41,15 @@ func main() {
 	var err error
 
 	// reading app settings
-	var leho = Leho.Leho{Setting: &settings, FileName: ConfigFile}
-	err = leho.ReadSetting()
+	var leho = Leho.Leho{FileName: ConfigFile}
+	err = leho.ReadSetting(&settings)
 	if err != nil {
-		_ = leho.WriteSetting()
+		_ = leho.WriteSetting(settings)
 	}
 	//fmt.Printf("%s\n", settings.Host)
 
 	//
-	settings.ConnString = fmt.Sprintf("odbc:server=%s;user id=%s;password=%s;database=%s;app name=RS.Loyalty",
+	settings.connString = fmt.Sprintf("odbc:server=%s;user id=%s;password=%s;database=%s;app name=RS.Loyalty",
 		settings.Host, settings.User, settings.Password, settings.Database)
 	//fmt.Printf("ConnString='%s'\n", settings.ConnString)
 
@@ -216,7 +218,9 @@ func main() {
 			}
 		case "-d":
 			fmt.Printf("Uploading discount cards...\n")
-			err = UploadDiscountCardsAsyncC()
+			//err = UploadDiscountCardsAsyncC()
+			var url = fmt.Sprintf("%s/api/loyalty_cards/loyalty_card_import", settings.DestinationHost)
+			err := UploadObjects(url, FileDiscountCards)
 			if err != nil {
 				fmt.Printf("Failed to upload discount cards: %v\n", err)
 			} else {

@@ -3,74 +3,84 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
-var clients []*http.Client
-
 func UploadCustomersAsync() error {
 
-	//
+	// declare variables
 	var timer time.Time
 	var global time.Time
-	//var waitGroup sync.WaitGroup
-	var numbers = 10
-	var cycleNumbers int
+	var loopNumbers int
+	var results = make(chan error)
 	var url = fmt.Sprintf("%s/api/customers/customer_import", settings.DestinationHost)
 
-	// creat pool clients
-	//for i := 0; i < numbers; i++ {
-	//	clients = append(clients, NewClient())
-	//}
+	// print start time
+	fmt.Printf("Start time: %s\n", time.Now().Format(time.ANSIC))
 
-	// read customers file
-	fmt.Printf("Time start: %s\n", time.Now().Format(time.ANSIC))
-	fmt.Printf("Reading customers file. Be patient...\n")
-	var customers []Customer
-	err := ObjectRead(&customers, FileCustomers)
-	if err != nil {
-		return err
+	// search file(s) to load
+	files, _ := filepath.Glob(fmt.Sprintf("%s_?????%s", strings.TrimSuffix(FileCustomers, filepath.Ext(FileCustomers)), filepath.Ext(FileCustomers)))
+	if len(files) == 0 {
+		files, _ = filepath.Glob(FileCustomers)
 	}
-	fmt.Printf("Loaded customers: %d\n", len(customers))
-
-	cycleNumbers = len(customers) / numbers
-	if len(customers)%numbers != 0 {
-		cycleNumbers++
+	if len(files) == 0 {
+		return fmt.Errorf("files to loading not found")
 	}
 
+	// start main loop
 	global = time.Now()
-	//timer = time.Now()
-	for i := 0; i < cycleNumbers; i++ {
-		timer = time.Now()
-		for j := 0; j < numbers; j++ {
-			waitGroup.Add(1)
-			var customer, err = json.MarshalIndent(customers[i*numbers+j], "", "\t")
-			if err != nil {
-				fmt.Printf("\tFailed to serialize customer '%s': %v\n", customers[i+j].CustomerID, err)
-				continue
-			}
-			//var channel = make(chan struct{})
-			j := j
-			go func(url string, customer []byte, number int) {
-				//err := ExecRequest2(clients[j], url, string(customer))
-				//fmt.Printf("i=%d, j=%d\n", i, j)
+	for _, file := range files {
 
-				err := ExecRequest(url, string(customer))
-
-				if err != nil {
-					fmt.Printf("\tFailed to upload customer '%d': %v\n", number, err)
-					return
-				}
-				waitGroup.Done()
-			}(url, customer, i*numbers+j)
-			//<-channel
+		// load list of customers from file
+		fmt.Printf("Loading list of customers from file '%s'\n", file)
+		var customers []Customer
+		err := ObjectRead(&customers, file)
+		if err != nil {
+			return err
 		}
-		waitGroup.Wait()
-		fmt.Printf("\rCyrcle %d. Uploaded customers from %d to %d. Time: %d ms, total: %10.2f min, average: %4.2f objects/second",
-			i+1, i*numbers+1, i*numbers+numbers, time.Since(timer).Milliseconds(), time.Since(global).Minutes(), float64(i*numbers+numbers)/time.Since(global).Seconds())
+		fmt.Printf("Customers loaded: %d\n", len(customers))
+
+		// calculate loops number
+		loopNumbers = len(customers) / settings.PacketSize
+		if len(customers)%settings.PacketSize != 0 {
+			loopNumbers++
+		}
+
+		// start upload loop
+		for i := 0; i < loopNumbers; i++ {
+
+			//
+			timer = time.Now()
+
+			//
+			end := settings.PacketSize
+			if i+1 == loopNumbers {
+				end = len(customers) % settings.PacketSize
+			}
+
+			// call pool of request
+			for j := 0; j < end; j++ {
+				var customer, _ = json.MarshalIndent(customers[i*settings.PacketSize+j], "", "\t")
+				go ExecRequest2(url, string(customer), results)
+			}
+
+			// await result
+			for j := 0; j < end; j++ {
+				err = <-results
+				if err != nil {
+					fmt.Printf("Error: %v", err)
+				}
+			}
+
+			fmt.Printf("\rCyrcle %09d. Uploaded customers from %09d to %09d. Time: %05d ms, total: %05.2f min, average: %05.2f objects/second",
+				i+1, i*settings.PacketSize+1, i*settings.PacketSize+settings.PacketSize, time.Since(timer).Milliseconds(),
+				time.Since(global).Minutes(), float64(i*settings.PacketSize+settings.PacketSize)/time.Since(global).Seconds())
+		}
+		fmt.Printf("\n")
 	}
 
-	fmt.Printf("Time finish: %s\n", time.Now().Format(time.ANSIC))
+	fmt.Printf("\nFinish time: %s\n", time.Now().Format(time.ANSIC))
 	return nil
 }

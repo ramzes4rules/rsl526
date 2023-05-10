@@ -29,12 +29,14 @@ func UploadAccountsAsync() error {
 		files, _ = filepath.Glob(FileAccounts)
 	}
 	if len(files) == 0 {
-		return fmt.Errorf("files for loading not found")
+		return fmt.Errorf("files to loading not found")
 	}
 
+	//
+	global = time.Now()
 	for _, file := range files {
 
-		// read file
+		// load list of accounts from file
 		fmt.Printf("Loading account from file %s\n", file)
 		var accounts []Account
 		err := ObjectRead(&accounts, file)
@@ -43,14 +45,13 @@ func UploadAccountsAsync() error {
 		}
 		fmt.Printf("Accounts loaded: %d", len(accounts))
 
-		// calculate cycles numbers
+		// calculate loops number
 		loopNumbers = len(accounts) / settings.PacketSize
 		if len(accounts)%settings.PacketSize != 0 {
 			loopNumbers++
 		}
 
 		// run loop
-		global = time.Now()
 		for i := 0; i < loopNumbers; i++ {
 			timer = time.Now()
 

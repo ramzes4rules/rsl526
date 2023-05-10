@@ -37,13 +37,13 @@ func ExportAccounts() error {
 	fmt.Printf("Got account mappins numbers: %d\n", len(mappings))
 
 	// transforming list
-	fmt.Printf("Transforming accounts")
+	fmt.Printf("Transforming accounts\n")
 	var out []Account
 	for _, account := range accounts {
 		account.CurrencyId = mappings[CurrencyId][CurrencyId]
 		out = append(out, account)
 	}
-	fmt.Printf("Accounts transformed")
+	fmt.Printf("Accounts transformed\n")
 
 	// write accounts to file(s)
 	fmt.Printf("Writing accounts to file(s). Be patient\n")
@@ -60,7 +60,7 @@ func ExportAccounts() error {
 		}
 		for i := 0; i < numbers; i++ {
 			name := fmt.Sprintf("%s_%05d%s", strings.TrimSuffix(FileAccounts, filepath.Ext(FileAccounts)), i, filepath.Ext(FileAccounts))
-			end := i*settings.SplitNumbers + settings.SplitNumbers - 1
+			end := i*settings.SplitNumbers + settings.SplitNumbers
 			if end > len(out) {
 				end = len(out)
 			}

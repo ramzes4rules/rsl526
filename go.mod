@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/denisenkom/go-mssqldb v0.12.3
-	github.com/ramzes4rules/leho v0.1.1
+	github.com/ramzes4rules/leho v0.1.2-0.20230424065514-0e421b5b5eae
 )
 
 require (
